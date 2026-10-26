@@ -1,0 +1,6 @@
+# Machine-learning dependencies. NOT needed for Phase 0 - install from Phase 1 onwards.
+# These are exactly the versions already present on this machine (CUDA 12.6 build).
+# The "+cu126" build comes from PyTorch's own package index, so install with:
+#   python -m pip install -r requirements-ml.txt --extra-index-url https://download.pytorch.org/whl/cu126
+torch==2.12.0+cu126
+torchvision==0.27.0+cu126

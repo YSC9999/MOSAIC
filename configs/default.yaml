@@ -1,0 +1,124 @@
+# Default configuration for MOSAIC-FL (Phase 0).
+# Every setting is optional: anything you leave out falls back to the default
+# written in mosaic/config.py. Unknown keys are rejected so typos cannot hide.
+
+experiment:
+  name: phase0        # label used in output folder names (letters, digits, _ - .)
+  seed: 1337          # master random seed: same seed -> same results
+
+paths:
+  artifacts_dir: artifacts   # where runs, manifests, checkpoints, ... are written
+  data_dir: data             # where the RWF-2000 dataset will live
+
+decode:
+  max_frames: null           # null = read the whole video
+  frame_count_tolerance: 1   # allow the container's frame count to be off by this much
+
+window:
+  policy: whole_clip         # whole_clip | sliding  (RWF-2000 clips are ~5 s)
+  window_seconds: 5.0        # only used by the "sliding" policy
+  stride_seconds: 5.0        # only used by the "sliding" policy
+  clip_aggregation: mean     # mean | max : how window scores become a clip score
+
+logging:
+  level: INFO                # DEBUG | INFO | WARNING | ERROR
+  to_file: true              # also write run.log inside the run folder
+
+pipeline:
+  stages: [ingestion]        # later phases add: clarity, gate, detector, temporal_classifier
+
+data:
+  raw_dir: data/RWF-2000
+  manifest_path: artifacts/manifests/rwf2000_manifest.json
+  val_carve_ratio: 0.2
+  num_frames: 16
+  sampling_strategy: uniform # uniform | stride
+  target_height: 224
+  target_width: 224
+  batch_size: 8
+  num_workers: 0             # 0 recommended on Windows to avoid process spawn latency
+  pin_memory: true
+  horizontal_flip_prob: 0.5  # train-only horizontal flip
+
+model:
+  architecture: baseline_temporal # baseline_temporal | spatial_temporal_fusion | majority | motion_energy
+  backbone: resnet18             # resnet18 | cnn_light
+  pretrained: false              # false for offline/deterministic runs, true for full pretrained weights
+  freeze_backbone: true
+  hidden_dim: 128
+  rnn_type: gru                  # gru | lstm
+  rnn_layers: 1
+  dropout: 0.2
+  use_scene: true
+  use_tracks: true
+  use_kinematics: true
+  use_masks: true
+  use_objects: false
+  decision_threshold: 0.5
+  mask_predicted_observations: false
+  max_tracks: 8
+  max_steps: 32
+
+train:
+  epochs: 5
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  device: auto                   # auto | cuda | cpu
+  early_stopping_patience: 3
+
+clarity:
+  min_laplacian_variance: 10.0
+  max_laplacian_variance: 600.0
+  target_width: 1280
+  target_height: 720
+  aggregation: mean              # mean | min
+
+degradation:
+  enabled: false
+  kind: blur                     # resolution | blur | compression | low_light | noise | frame_drop | occlusion
+  severity: 0.0
+  seed: 1337
+
+motion_gate:
+  enabled: true
+  threshold: 0.010
+  burst_threshold: 0.020
+  burst_hold_frames: 5
+  keep_alive_frames: 15
+  downsample_width: 64
+  downsample_height: 64
+
+detector:
+  enabled: true
+  architecture: fasterrcnn_mobilenet_320 # fasterrcnn_mobilenet_320 | ssdlite320 | mock
+  confidence_threshold: 0.40
+  min_box_area: 100.0
+  min_box_height: 16.0
+  extract_features: false
+  feature_dim: 128
+  device: auto                           # auto | cuda | cpu
+
+masks:
+  enabled: true
+  min_visible_fraction: 0.05
+  confidence: 0.85
+
+objects:
+  enabled: false
+  max_association_distance: 80.0
+
+tracker:
+  iou_threshold: 0.3
+  high_det_threshold: 0.5
+  low_det_threshold: 0.1
+  max_lost_frames: 15
+  min_hits: 2
+  max_tracks: 16
+
+tokens:
+  cache_dir: artifacts/token_cache/tracks
+  normalize_coords: true
+  max_tokens_per_window: 128
+
+
+

@@ -1,0 +1,12 @@
+# Generated output - never commit
+artifacts/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+# Datasets and model weights are large and licensed separately
+data/
+*.pt
+*.pth
+*.onnx
