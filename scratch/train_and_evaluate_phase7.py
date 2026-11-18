@@ -202,12 +202,16 @@ def run_training_and_evaluation() -> dict:
         lr=cfg.train.learning_rate,
         weight_decay=cfg.train.weight_decay,
     )
+    num_epochs = 60
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=num_epochs, eta_min=1e-5
+    )
     criterion = nn.BCELoss()
 
     best_val_f1 = 0.0
     best_weights = None
 
-    for epoch in range(1, 9):
+    for epoch in range(1, num_epochs + 1):
         model.train()
         total_loss = 0.0
         for batch in train_loader:
@@ -224,6 +228,7 @@ def run_training_and_evaluation() -> dict:
             optimizer.step()
             total_loss += loss.item() * len(targets)
 
+        scheduler.step()
         train_loss = total_loss / len(train_samples)
 
         # Validation pass
@@ -244,23 +249,27 @@ def run_training_and_evaluation() -> dict:
         val_scores = np.array(val_scores)
         val_targets = np.array(val_targets)
 
-        # Grid search threshold on validation set
-        thresholds = np.linspace(0.3, 0.7, 41)
+        # Grid search threshold on validation set maximizing balanced accuracy and F1 across full standard range
+        thresholds = np.linspace(0.10, 0.90, 81)
         best_th_epoch = 0.5
-        best_f1_epoch = 0.0
+        best_score_epoch = 0.0
         for th in thresholds:
             preds = (val_scores >= th).astype(int)
             res = evaluate_predictions(preds, val_targets.astype(int))
-            if res.f1 > best_f1_epoch:
-                best_f1_epoch = res.f1
+            score = 0.5 * res.accuracy + 0.5 * res.f1
+            if score > best_score_epoch:
+                best_score_epoch = score
                 best_th_epoch = th
 
-        print(f"Epoch {epoch}/8: Train Loss = {train_loss:.4f}, Val F1 = {best_f1_epoch:.4f} (best tau = {best_th_epoch:.2f})")
-
-        if best_f1_epoch > best_val_f1:
-            best_val_f1 = best_f1_epoch
+        is_new_best = best_score_epoch > best_val_f1
+        if is_new_best:
+            best_val_f1 = best_score_epoch
             optimal_tau = best_th_epoch
             best_weights = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+
+        if is_new_best or epoch % 5 == 0 or epoch == num_epochs or epoch == 1:
+            star = " ★ [BEST]" if is_new_best else ""
+            print(f"Epoch {epoch:2d}/{num_epochs}: Train Loss = {train_loss:.4f}, Val Bal-Score = {best_score_epoch:.4f} (tau = {best_th_epoch:.2f}){star}")
 
     # Load best model weights
     model.load_state_dict(best_weights)
@@ -473,10 +482,14 @@ def run_training_and_evaluation() -> dict:
     plt.suptitle("MOSAIC-FL Phase 7: Spatial-Temporal Fusion Model Dashboard (Held-Out Test Set)",
                  fontsize=13.5, weight="bold", y=0.98)
 
-    vis_path = Path(r"C:\Users\yscha\.gemini\antigravity-cli\brain\68bdc3f2-7c90-4346-b91d-8cd22e91ae87\phase7_temporal_classifier_dashboard.png")
+    vis_path = Path("artifacts/reports/phase7_temporal_classifier_dashboard.png")
+    vis_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(vis_path, bbox_inches="tight")
+    brain_vis = Path(r"C:\Users\yashw\.gemini\antigravity\brain\35aa6c95-9610-4c82-b136-9be978406ca7\phase7_temporal_classifier_dashboard.png")
+    brain_vis.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(brain_vis, bbox_inches="tight")
     plt.close()
-    print(f"Generated dashboard artifact at: {vis_path}")
+    print(f"Generated dashboard artifact at: {vis_path} and {brain_vis}")
 
     return report
 

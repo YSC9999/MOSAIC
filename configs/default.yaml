@@ -43,7 +43,7 @@ data:
 model:
   architecture: baseline_temporal # baseline_temporal | spatial_temporal_fusion | majority | motion_energy
   backbone: resnet18             # resnet18 | cnn_light
-  pretrained: false              # false for offline/deterministic runs, true for full pretrained weights
+  pretrained: false              # true for full pretrained ImageNet weights
   freeze_backbone: true
   hidden_dim: 128
   rnn_type: gru                  # gru | lstm

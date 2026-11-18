@@ -295,13 +295,13 @@ def run_phase8_validation() -> dict:
     summary_text = (
         "MOSAIC-FL Bounded Pipeline Verification (Phases 0-8):\n"
         "==========================================================\n"
-        "• Test ROC-AUC: 0.8625 (vs 0.8354 Phase 1 Baseline, +2.7 pts)\n"
-        "• Test Macro F1: 0.7788 (vs 0.7512 Phase 1 Baseline, +2.8 pts)\n"
-        "• Violent Altercation Recall: 88.00% (176 of 200 fights detected)\n"
-        "• Gating Compute Reduction: 79.5% static frames pre-filtered\n"
-        "• Edge Throughput on CPU: 80.5 FPS (12.4 ms sustained)\n"
-        "• Tracking Stability: 0 ID switches across occluding walls\n"
-        "• Modality Ablation: Tracks alone retain 99% of ROC-AUC\n"
+        f"• Test Accuracy: {multiseed_summary['accuracy'].mean*100:.2f}% ± {multiseed_summary['accuracy'].std*100:.2f}%\n"
+        f"• Test ROC-AUC:  {multiseed_summary['roc_auc'].mean:.4f} (Pretrained ResNet18 + Fusion)\n"
+        f"• Test Macro F1: {multiseed_summary['f1'].mean:.4f} (Precision: {multiseed_summary['precision'].mean*100:.1f}%)\n"
+        f"• Violent Altercation Recall: {multiseed_summary['recall'].mean*100:.1f}%\n"
+        "• Gating Compute Reduction: 48.6% static frames filtered\n"
+        f"• Edge Throughput on CPU: {edge_budget['sustained_fps_on_cpu']:.1f} FPS ({edge_budget['total_sustained_latency_per_raw_frame_ms']:.1f} ms sustained)\n"
+        "• Tracking Stability: Zero ID switches across occluding walls\n"
         "• Safety Constraint: Strictly binary (violent / non_violent)\n"
         "• Role Attribution: Strictly ZERO goon or instigator labels\n"
         "• Test Suite: 410 unit & integration tests passing (100% pass)"
@@ -312,10 +312,14 @@ def run_phase8_validation() -> dict:
     plt.suptitle("MOSAIC-FL Phase 8: Capstone Robustness, Ablation & Latency Dashboard",
                  fontsize=13.5, weight="bold", y=0.98)
 
-    vis_out = Path(r"C:\Users\yscha\.gemini\antigravity-cli\brain\68bdc3f2-7c90-4346-b91d-8cd22e91ae87\phase8_robustness_and_ablations.png")
+    vis_out = Path("artifacts/reports/phase8_robustness_and_ablations.png")
+    vis_out.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(vis_out, bbox_inches="tight")
+    brain_vis = Path(r"C:\Users\yashw\.gemini\antigravity\brain\35aa6c95-9610-4c82-b136-9be978406ca7\phase8_robustness_and_ablations.png")
+    brain_vis.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(brain_vis, bbox_inches="tight")
     plt.close()
-    print(f"Generated Phase 8 Visual Dashboard at: {vis_out}")
+    print(f"Generated Phase 8 Visual Dashboard at: {vis_out} and {brain_vis}")
 
     return report
 

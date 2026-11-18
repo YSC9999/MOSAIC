@@ -246,5 +246,5 @@ def generate_phase6_visuals(output_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    out = Path(r"C:\Users\yscha\.gemini\antigravity-cli\brain\68bdc3f2-7c90-4346-b91d-8cd22e91ae87\phase6_tracking_and_tokens.png")
+    out = Path("artifacts/reports/phase6_tracking_and_tokens.png")
     generate_phase6_visuals(out)

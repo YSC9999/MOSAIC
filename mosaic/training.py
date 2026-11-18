@@ -217,7 +217,7 @@ def train_baseline_classifier(
     val_targets: List[int] = []
     val_energies: List[float] = []
 
-    use_feature_cache = bool(getattr(model.backbone, "frozen", False)) and config.train.epochs > 1
+    use_feature_cache = bool(getattr(model.backbone, "frozen", False)) and config.train.epochs >= 1
     cached_train_samples: List[Dict[str, Any]] = []
     cached_val_batches: List[Dict[str, Any]] = []
     cached_test_batches: List[Dict[str, Any]] = []
