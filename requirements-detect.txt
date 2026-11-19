@@ -1,0 +1,8 @@
+# Detection and tracking stage only (scripts/build_det.py, build_tracks.py, build_skd.py). Install into the project's .venv:
+#   python -m venv --system-site-packages .venv
+#   .venv\Scripts\python.exe -m pip install -r requirements-detect.txt
+# --system-site-packages lets the .venv reuse torch/torchvision/numpy/opencv from the main environment (install those first).
+rfdetr==1.12.1
+trackers==2.7.0
+supervision==0.31.7
+pycocotools==2.0.11

@@ -1,6 +1,6 @@
-# Machine-learning dependencies. NOT needed for Phase 0 - install from Phase 1 onwards.
-# These are exactly the versions already present on this machine (CUDA 12.6 build).
-# The "+cu126" build comes from PyTorch's own package index, so install with:
-#   python -m pip install -r requirements-ml.txt --extra-index-url https://download.pytorch.org/whl/cu126
-torch==2.12.0+cu126
-torchvision==0.27.0+cu126
+# PyTorch (needed for the Swin features, training and evaluation). Verified: torch 2.11.0 + CUDA 12.8 build.
+# Install:  python -m pip install -r requirements-ml.txt --extra-index-url https://download.pytorch.org/whl/cu128
+# On another machine pick the CUDA build that matches the driver (see https://pytorch.org/get-started/locally/) and
+# change "cu128" in both places; any recent torch 2.x should work, but only the versions below were tested.
+torch==2.11.0+cu128
+torchvision==0.26.0+cu128

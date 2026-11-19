@@ -29,6 +29,9 @@ def safe_name(orig_path: str) -> str:
 
 
 def main() -> None:
+    if len(sys.argv) < 3 or sys.argv[1] in ("-h", "--help"):
+        print(__doc__)
+        sys.exit(0 if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help") else 2)
     src, dst = Path(sys.argv[1]), Path(sys.argv[2])
     delete = "--delete-zip-when-verified" in sys.argv
     z = zipfile.ZipFile(src)
