@@ -118,3 +118,20 @@ def window_members(
         cand.sort(key=lambda c: (-c[0], -c[1], c[2]))
         result.append({"members": [c[2] for c in cand[:cap]], "count_uncapped": len(cand)})
     return result
+
+
+def gated_windows(kept_pos: Sequence[int], ids: List[np.ndarray], scores: List[np.ndarray], n_sampled: int,
+                  min_frames: int = MIN_WINDOW_FRAMES, cap: int = MAX_PEOPLE_PER_WINDOW) -> Dict[str, Any]:
+    """Window membership when only some sampled frames were detected.
+
+    ``kept_pos[i]`` is the position (0..n_sampled-1) of the i-th detected row. Windows keep the layout of the
+    ungated pipeline; a person belongs to a window if seen in >= ``min_frames`` of its detected frames.
+    Returns ``window_slots`` (per window, 16 entries: row index or -1) and ``windows`` (members, count).
+    """
+    from .windows import window_index_matrix
+
+    row_of = {int(p): r for r, p in enumerate(kept_pos)}
+    mat = window_index_matrix(n_sampled)
+    slots = [[row_of.get(int(p), -1) for p in row] for row in mat]
+    rows_in = [[r for r in s if r >= 0] for s in slots]
+    return {"window_slots": slots, "windows": window_members(ids, scores, rows_in, min_frames, cap)}

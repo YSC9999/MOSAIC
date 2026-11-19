@@ -1,6 +1,6 @@
 """Frozen Video Swin-T (Kinetics-400) window features (spec section 7, Stage A).
 
-For each clip: decode with OpenCV, select frames (``windows.select_frame_indices``),
+For each clip: decode with OpenCV, select frames (``windows.sample_indices``),
 resize each frame straight to 224x224 (bilinear, aspect not preserved), apply
 ImageNet mean/std, cut 16-frame windows and run the frozen backbone with its
 classification head removed. Two views are cached: original and horizontal flip.
@@ -19,7 +19,7 @@ import torch
 from torch import nn
 
 from .ingestion import VideoReader
-from .windows import pad_indices, select_frame_indices, window_index_matrix
+from .windows import sample_indices, window_index_matrix
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
@@ -55,12 +55,10 @@ def read_clip_frames(path: Path | str, max_frames: int = 64, size: int = 224,
         records = VideoReader(path).read_all()
         if not records:
             raise RuntimeError(f"no frames decoded from {path}")
-        idx = select_frame_indices(len(records), max_frames)
-        idx, is_pad = pad_indices(idx, WINDOW_LEN)
+        idx, is_pad = sample_indices(len(records), max_frames)
         frames = np.stack([_prep(records[i].frame, size) for i in idx])
         return frames, is_pad
-    idx = select_frame_indices(n_frames, max_frames)
-    idx, is_pad = pad_indices(idx, WINDOW_LEN)
+    idx, is_pad = sample_indices(n_frames, max_frames)
     wanted, last, got = set(idx), max(idx), {}
     for rec in VideoReader(path).iter_frames():
         if rec.frame_index in wanted:

@@ -1,12 +1,17 @@
-# Generated output - never commit
-artifacts/
+# Generated Python and test output
 __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
 venv/
-# Datasets and model weights are large and licensed separately
+# Datasets are large and licensed separately
 data/
-*.pt
 *.pth
 *.onnx
+
+# Generated outputs and heavy files (small, curated results live in results/)
+artifacts/
+*.pt
+*.zip
+*.npz
+*.npy

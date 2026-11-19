@@ -124,6 +124,7 @@ def clip_observations(det: Dict[str, Any], track_ids: List[np.ndarray]) -> Dict[
     meta, frames = det["meta"], det["frames"]
     W0, H0 = float(meta["width"]), float(meta["height"])
     ts = np.array([f["timestamp"] for f in frames], np.float64)
+    pos = [f.get("pos", r) for r, f in enumerate(frames)]   # position in the 64 sampled frames (gated clips skip some)
     obs: Dict[Tuple[int, int], Dict[str, Any]] = {}
     history: Dict[int, List[Dict[str, Any]]] = {}
 
@@ -183,7 +184,7 @@ def clip_observations(det: Dict[str, Any], track_ids: List[np.ndarray]) -> Dict[
                 if valid and p["valid"]:
                     x[20] = np.clip((x[7] - p["reach"]) / dt, -RATE_CLIP, RATE_CLIP)
                     x[21] = crop_iou(mask, crop, p["mask"], p["crop"])
-                x[27] = min(1.0, (r - p["r"]) / GAP_NORM)
+                x[27] = min(1.0, (pos[r] - pos[p["r"]]) / GAP_NORM)
                 x[28] = 1.0
             else:
                 acc = None
@@ -227,7 +228,7 @@ def build_clip_tensors(det: Dict[str, Any], tracks: Dict[str, Any], max_people: 
     frames = det["frames"]
     ts = np.array([f["timestamp"] for f in frames], np.float64)
     obs = clip_observations(det, tracks["track_ids"])
-    rows = tracks["window_rows"]
+    rows = tracks["window_slots"] if "window_slots" in tracks else tracks["window_rows"]   # per window: row index or -1 for a skipped frame
     W, T, P = len(rows), len(rows[0]), max_people
     nodes = np.zeros((W, P, T, NODE_DIM), np.float32)
     mask = np.zeros((W, P, T), bool)
@@ -251,6 +252,8 @@ def build_clip_tensors(det: Dict[str, Any], tracks: Dict[str, Any], max_people: 
         members[wk, : len(mem)] = mem
         count[wk] = win["count_uncapped"]
         for ti, r in enumerate(rows[wk]):
+            if r < 0:
+                continue
             present = [(pi, t) for pi, t in enumerate(mem) if (r, t) in obs]
             for pi, t in present:
                 nodes[wk, pi, ti] = obs[(r, t)]["x"]

@@ -35,6 +35,21 @@ def select_frame_indices(n_frames: int, max_frames: int = 64) -> List[int]:
     return idx
 
 
+def sample_indices(n_frames: int, total: int = 64) -> tuple[List[int], List[bool]]:
+    """Exactly ``total`` sample positions for a clip of any length, so every clip gets the same window layout.
+
+    ``n_frames >= total``: evenly spaced distinct frames (nothing padded).
+    ``n_frames <  total``: every native frame, then the last frame repeated; ``is_pad`` marks the repeats. Padded positions
+    must be excluded from detection, tracking and every rate computation (their time step would be zero).
+    """
+    idx = select_frame_indices(n_frames, total)
+    is_pad = [False] * len(idx)
+    while len(idx) < total:
+        idx.append(idx[-1])
+        is_pad.append(True)
+    return idx, is_pad
+
+
 def window_starts(n_sampled: int, window_len: int = 16, stride: int = 8) -> List[int]:
     """Start positions (into the sampled frame list) of each window.
 

@@ -252,3 +252,21 @@ class MotionGate:
             motion_scores=motion_scores,
             decisions=decisions,
         )
+
+
+# --- The pipeline always gates: only frames kept by the chosen setting are detected, tracked and featurized. ---
+# name: (threshold, burst_threshold, burst_hold_frames, keep_alive_frames); thresholds apply to 64x64 grayscale thumbnails
+# of the 64 sampled frames (about 12.8 fps).
+GATE_SETTINGS: Dict[str, Tuple[float, float, int, int]] = {
+    "gdef": (0.010, 0.020, 5, 15),   # default: keeps ~46% of frames, accuracy within ~1 point of no gating
+    "g02": (0.020, 0.040, 5, 15),    # stronger: keeps ~28% of frames, about 1-1.5 points lower
+}
+DEFAULT_GATE = "gdef"
+
+
+def make_gate(name: str = DEFAULT_GATE) -> "MotionGate":
+    """Motion gate for a named setting."""
+    if name not in GATE_SETTINGS:
+        raise MotionGateError(f"unknown gate {name!r}; choose from {sorted(GATE_SETTINGS)}")
+    t, b, h, k = GATE_SETTINGS[name]
+    return MotionGate(True, t, b, h, k)

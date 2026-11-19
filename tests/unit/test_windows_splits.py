@@ -105,3 +105,17 @@ def test_window_motion_static_and_moving():
     moving = np.stack([np.full((8, 8), 0.01 * i, np.float32) for i in range(50)])
     wm = window_motion(moving)
     assert wm.shape == (6,) and np.allclose(wm, 0.01, atol=1e-5)
+
+
+def test_sample_indices_is_always_64_and_marks_padding():
+    from mosaic.windows import sample_indices, window_starts
+    for n in (1, 16, 41, 64, 65, 150, 900):
+        idx, pad = sample_indices(n)
+        assert len(idx) == 64 and len(pad) == 64
+        assert len(window_starts(64)) == 7
+        real = [i for i, p in zip(idx, pad) if not p]
+        assert len(real) == min(n, 64) and real == sorted(real) and len(set(real)) == len(real)
+        assert all(i == idx[len(real) - 1] for i, p in zip(idx, pad) if p)     # repeats copy the last real frame
+        assert not pad[0]                                                        # position 0 is always a real frame
+    idx, pad = sample_indices(150)
+    assert not any(pad) and idx[0] == 0 and idx[-1] == 149

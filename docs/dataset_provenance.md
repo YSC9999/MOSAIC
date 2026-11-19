@@ -59,3 +59,12 @@ To prevent data leakage and guarantee clean evaluation (as specified in Section 
 
 - **Research Purpose:** RWF-2000 is released specifically for academic and non-commercial computer vision research.
 - **Privacy Notice:** Videos depict public surveillance footage. MOSAIC-FL operates strictly on bounding boxes, motion kinematics, and silhouette contours. No facial recognition, personal identity matching, or demographic profiling is performed.
+
+## Copy used in this project
+
+- **30 fps copy:** Kaggle `vulamnguyen/rwf2000` - 2,000 clips, 150 frames at 30 fps each. Extracted to
+  `data/RWF-2000_30fps` with short hashed names for a few garbled file names (`name_map.json` maps them back).
+  Format and content were checked against the dataset description (split structure, frame count and rate); confirm the
+  source and licence before publishing.
+- Exact duplicates (11) are removed keeping the test copy; the internal validation split is grouped by source video, so
+  no video appears on both sides of a split.

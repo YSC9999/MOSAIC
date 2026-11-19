@@ -34,6 +34,12 @@ def source_video_id(rel_path: str) -> str:
     return _SUFFIX.sub("", stem)
 
 
+def entry_group(e: Mapping) -> str:
+    """Source-video key of a manifest entry: its ``group`` field if present, else derived from the file name."""
+    g = e.get("group") if hasattr(e, "get") else None
+    return str(g) if g else source_video_id(e["rel_path"])
+
+
 def build_grouped_split(
     entries: Iterable[Mapping],
     holdout_fraction: float = 0.1,
@@ -59,7 +65,7 @@ def build_grouped_split(
         raise SplitError("no training entries to split")
 
     y = np.asarray([int(e["target"]) for e in pool])
-    groups = np.asarray([source_video_id(e["rel_path"]) for e in pool])
+    groups = np.asarray([entry_group(e) for e in pool])
     n_splits = max(2, round(1.0 / holdout_fraction))
     sgkf = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     _, hold_idx = next(sgkf.split(np.zeros(len(pool)), y, groups))
@@ -77,7 +83,7 @@ def validate_split(entries: Iterable[Mapping], assignment: Mapping[str, str]) ->
         part = assignment.get(e["rel_path"])
         if part is None:
             raise SplitError(f"entry not assigned: {e['rel_path']}")
-        by_source.setdefault(source_video_id(e["rel_path"]), set()).add(part)
+        by_source.setdefault(entry_group(e), set()).add(part)
     leaks = sorted(s for s, parts in by_source.items() if len(parts) > 1)
     if leaks:
         raise SplitError(f"{len(leaks)} source videos span splits, e.g. {leaks[:3]}")
@@ -92,7 +98,7 @@ def split_summary(entries: Iterable[Mapping], assignment: Mapping[str, str]) -> 
         part = assignment[e["rel_path"]]
         clips[part] += 1
         pos[part] += int(e["target"])
-        sources.setdefault(part, set()).add(source_video_id(e["rel_path"]))
+        sources.setdefault(part, set()).add(entry_group(e))
     return {
         part: {"clips": clips[part], "violent": pos[part], "source_videos": len(sources[part])}
         for part in sorted(clips)

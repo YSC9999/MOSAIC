@@ -1,9 +1,9 @@
-"""Track every cached detection clip and compute window membership. Run with .venv.
+"""Tracking stage over a gated detection cache (built by build_det.py). Gating is not optional. Run with .venv.
 
-Skips clips without a detection pickle yet and clips already tracked.
-Usage: .venv/Scripts/python.exe scripts/build_tracks.py
+For each clip: take the frames the gate kept (stored in the cache), run ByteTrack over them (cleaned settings: high 0.5,
+NMS 0.7), and store window membership on the 16-frame window layout of the 64 sampled frames.
+Usage: .venv/Scripts/python.exe scripts/build_tracks.py --det-dir D --out-dir O [--setting gdef --min-frames 4]
 """
-
 from __future__ import annotations
 
 import argparse
@@ -18,62 +18,51 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-
-from mosaic.track_join import drop_short_tracks, track_clip, window_members  # noqa: E402
-from mosaic.windows import window_index_matrix  # noqa: E402
-
-CACHE = Path(os.environ.get("MOSAIC_CACHE", "C:/mosaic_cache"))
+from mosaic.motion_gate import DEFAULT_GATE  # noqa: E402
+from mosaic.track_join import drop_short_tracks, gated_windows, track_clip  # noqa: E402
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--det-dir", default=str(CACHE / "det_rfdetr_seg_large"))
-    ap.add_argument("--out-dir", default=str(CACHE / "tracks_bytetrack"))
-    ap.add_argument("--high", type=float, default=0.25)
-    ap.add_argument("--nms-iou", type=float, default=None)
-    args = ap.parse_args()
-    det_dir, out_dir = Path(args.det_dir), Path(args.out_dir)
-    done = skipped = 0
-    stats = {"clips": 0, "dets": 0, "tracked_dets": 0, "tracks": 0, "windows": 0,
-             "windows_ge1": 0, "windows_ge2": 0, "people_per_window": 0}
+    ap.add_argument("--det-dir", required=True)
+    ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--setting", default=DEFAULT_GATE, help="gate whose kept frames to track (must be in the cache metadata)")
+    ap.add_argument("--min-frames", type=int, default=4)
+    ap.add_argument("--high", type=float, default=0.5)
+    ap.add_argument("--nms-iou", type=float, default=0.7)
+    a = ap.parse_args()
+    det_dir, out_dir = Path(a.det_dir), Path(a.out_dir)
+    st = {"clips": 0, "sampled": 0, "kept": 0, "windows": 0, "w_ge1": 0, "w_ge2": 0, "people": 0}
     t0 = time.time()
     for p in sorted(det_dir.rglob("*.pkl")):
-        rel = p.relative_to(det_dir)
-        out = out_dir / rel
+        out = out_dir / p.relative_to(det_dir)
         if out.exists():
-            skipped += 1
             continue
         with p.open("rb") as fh:
             d = pickle.load(fh)
         frames = d["frames"]
-        ids = drop_short_tracks(track_clip(frames, high=args.high, nms_iou=args.nms_iou))
-        rows = window_index_matrix(len(frames)).tolist()
-        wins = window_members(ids, [f["scores"] for f in frames], rows)
-        payload = {"meta": {"rel_path": d["meta"]["rel_path"], "n_sampled": len(frames)},
-                   "track_ids": ids, "window_rows": rows, "windows": wins}
+        if a.setting not in d["meta"].get("gate_kept", {}):
+            raise SystemExit(f"{p}: cache has no gate {a.setting!r}; rebuild it with build_det.py --gates {a.setting}")
+        kept = list(d["meta"]["gate_kept"][a.setting])
+        by_pos = {f["pos"]: f for f in frames}
+        sub = [by_pos[q] for q in kept]
+        n_sampled = int(d["meta"]["n_sampled"])
+        ids = drop_short_tracks(track_clip(sub, high=a.high, nms_iou=a.nms_iou))
+        gw = gated_windows(kept, ids, [f["scores"] for f in sub], n_sampled, min_frames=a.min_frames)
+        payload = {"meta": {"rel_path": d["meta"]["rel_path"], "n_sampled": n_sampled, "gate": vars(a)},
+                   "track_ids": ids, "kept_pos": kept, **gw}
         out.parent.mkdir(parents=True, exist_ok=True)
         with out.open("wb") as fh:
             pickle.dump(payload, fh, protocol=pickle.HIGHEST_PROTOCOL)
-        done += 1
-        stats["clips"] += 1
-        stats["dets"] += sum(len(a) for a in ids)
-        stats["tracked_dets"] += sum(int((a >= 0).sum()) for a in ids)
-        stats["tracks"] += len({t for a in ids for t in a.tolist() if t >= 0})
-        for w in wins:
-            k = len(w["members"])
-            stats["windows"] += 1
-            stats["windows_ge1"] += k >= 1
-            stats["windows_ge2"] += k >= 2
-            stats["people_per_window"] += k
-    if stats["clips"]:
-        s = dict(stats)
-        s["tracks_per_clip"] = s["tracks"] / s["clips"]
-        s["share_dets_tracked"] = s["tracked_dets"] / max(1, s["dets"])
-        s["mean_people_per_window"] = s["people_per_window"] / max(1, s["windows"])
-        s["share_windows_ge1"] = s["windows_ge1"] / max(1, s["windows"])
-        s["share_windows_ge2"] = s["windows_ge2"] / max(1, s["windows"])
-        print(json.dumps(s, indent=1))
-    print(f"finished: done={done} skipped={skipped} in {time.time() - t0:.0f} s")
+        st["clips"] += 1; st["sampled"] += n_sampled; st["kept"] += len(kept)
+        for w in gw["windows"]:
+            k = len(w["members"]); st["windows"] += 1; st["w_ge1"] += k >= 1; st["w_ge2"] += k >= 2; st["people"] += k
+    if st["clips"]:
+        print(json.dumps({"clips": st["clips"], "share_frames_kept": st["kept"] / st["sampled"],
+                          "mean_people_per_window": st["people"] / st["windows"],
+                          "share_windows_ge1": st["w_ge1"] / st["windows"], "share_windows_ge2": st["w_ge2"] / st["windows"],
+                          "gate": vars(a)}, indent=1))
+    print(f"finished in {time.time() - t0:.0f} s")
 
 
 if __name__ == "__main__":

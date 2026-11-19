@@ -1,0 +1,53 @@
+{
+ "created_utc": "2026-11-17T18:44:38.290828+00:00",
+ "backbone": "swin3d_t KINETICS400_V1, frozen, head=identity",
+ "data": "local RWF-2000 copy (50 frames @ 10 fps), v3 grouped split",
+ "sizes": {
+  "test": 400,
+  "fit": 1413,
+  "internal_val": 176
+ },
+ "threshold": 0.5,
+ "tta": "mean of original + horizontal flip probabilities",
+ "a_logreg_window_mean": {
+  "C": 0.01,
+  "internal_val": {
+   "accuracy": 0.8636363636363636,
+   "precision": 0.851063829787234,
+   "recall": 0.8888888888888888,
+   "f1": 0.8695652173913043,
+   "roc_auc": 0.9162790697674419,
+   "n": 176
+  },
+  "test": {
+   "accuracy": 0.8575,
+   "precision": 0.8704663212435233,
+   "recall": 0.84,
+   "f1": 0.8549618320610687,
+   "roc_auc": 0.9420499999999999,
+   "n": 400
+  }
+ },
+ "b_linear_topk_mil": {
+  "weight_decay": 0.01,
+  "epoch": 10,
+  "top_k": 3,
+  "lambda": 0.5,
+  "internal_val": {
+   "accuracy": 0.8920454545454546,
+   "precision": 0.8736842105263158,
+   "recall": 0.9222222222222223,
+   "f1": 0.8972972972972973,
+   "roc_auc": 0.9416020671834625,
+   "n": 176
+  },
+  "test": {
+   "accuracy": 0.885,
+   "precision": 0.8928571428571429,
+   "recall": 0.875,
+   "f1": 0.8838383838383839,
+   "roc_auc": 0.954375,
+   "n": 400
+  }
+ }
+}

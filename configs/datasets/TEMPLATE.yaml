@@ -1,0 +1,15 @@
+# Copy this file to <your_dataset>.yaml and edit. Everything else in the pipeline is dataset-independent.
+name: my_dataset               # used for file names: artifacts/manifests/<name>_manifest.json, cache folder, results folder
+root: data/my_dataset          # relative to the repository root, or an absolute path
+layout: class_only             # class_only: root/<class>/clip.mp4  (a seeded, grouped test split is made)
+                               # split_class: root/<split>/<class>/clip.mp4  (use split_dirs below)
+# split_dirs:                  # split_class only
+#   train: [train]
+#   test: [val, test]
+classes:
+  positive: [violence]         # folder names (case-insensitive) that mean "violent"
+  negative: [non_violence]
+group: none                    # none: every clip is its own group; suffix_number: <source>_<n>.ext share <source>
+test_fraction: 0.2             # class_only only
+seed: 42
+extensions: [.avi, .mp4, .mov, .mkv]

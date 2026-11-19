@@ -317,3 +317,13 @@ README explaining why.
 
 Day-1 tooling: `mosaic/windows.py`, `mosaic/splits.py`, `mosaic/scene_cache.py`,
 `scripts/build_v3_split.py`, `scripts/build_scene_cache.py`, `scripts/scene_probe.py`.
+
+## 18. Current state after the cleanup (2026-11-20)
+
+- Motion gating is **mandatory**: `scripts/build_det.py` runs the gate first and detects only the kept frames; settings live
+  in `mosaic/motion_gate.py` (`GATE_SETTINGS`, default `gdef`, ~46% of frames kept, accuracy within ~1 point of no gating).
+- The interaction graph (GAT) is **off by default**; masks stay on. Detector: RF-DETR-Seg Nano.
+- Outputs: clip class, violent time intervals, and one group box per violent window (`mosaic/outputs.py`,
+  `scripts/export_outputs.py`). Localisation is an area of action from person-branch attention, not a judgment of individuals.
+- The old Phase 0-8 code, tests, documents and generated results were removed (recoverable from git history).
+- `README.md` describes the layout and commands; `scripts/run_pipeline.py` runs all steps.

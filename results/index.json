@@ -1,0 +1,9 @@
+{
+ "rwf2000": {
+  "dataset": "RWF-2000 (30 fps)",
+  "model": "No GAT, Nano + default gate (46% of frames)",
+  "test_acc": "0.888 \u00b1 0.004",
+  "auc": "0.958",
+  "folder": "rwf2000/"
+ }
+}

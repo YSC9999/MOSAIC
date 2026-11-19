@@ -23,7 +23,7 @@ CACHE = Path(os.environ.get("MOSAIC_CACHE", "C:/mosaic_cache"))
 
 def main() -> None:
     trk_name = os.environ.get("MOSAIC_TRACKS", "tracks_bytetrack")
-    det_dir, trk_dir, out_dir = CACHE / "det_rfdetr_seg_large", CACHE / trk_name, CACHE / os.environ.get("MOSAIC_SKD", "skd")
+    det_dir, trk_dir, out_dir = CACHE / os.environ.get("MOSAIC_DET", "det_rfdetr_seg_large"), CACHE / trk_name, CACHE / os.environ.get("MOSAIC_SKD", "skd")
     done = skipped = failed = 0
     t0 = time.time()
     for tp in sorted(trk_dir.rglob("*.pkl")):
@@ -35,6 +35,12 @@ def main() -> None:
         try:
             d = pickle.load((det_dir / rel).open("rb"))
             t = pickle.load(tp.open("rb"))
+            if "kept_pos" in t:   # motion-gated clip: detections exist only for the kept frames
+                if "pos" in d["frames"][0]:     # gated det cache: rows addressed by their position
+                    by_pos = {f["pos"]: f for f in d["frames"]}
+                else:
+                    by_pos = {q: f for q, f in enumerate(d["frames"])}
+                d = {"meta": d["meta"], "frames": [dict(by_pos[q], pos=q) for q in t["kept_pos"]]}
             arrays = build_clip_tensors(d, t)
             out.parent.mkdir(parents=True, exist_ok=True)
             np.savez_compressed(out, **arrays)

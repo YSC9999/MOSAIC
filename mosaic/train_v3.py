@@ -46,12 +46,13 @@ class TrainConfig:
     window_neg_weight: float = 0.5
     use_scene: bool = True
     use_person: bool = True
-    use_gat: bool = True
+    use_gat: bool = False           # default: no interaction graph (GAT). It never helped; enable with --gat
     box_only: bool = False          # A4: zero mask-derived node/edge features
     dropout: float = 0.3            # fusion head dropout
     scene_in_dropout: float = 0.0   # dropout on the standardized scene features
     overfit_clips: int = 0          # >0: gate run, train+eval on this many fit clips
     name: str = "a1_full"
+    save_ckpt: bool = False         # write <out_dir>/<name>.pt (best weights + fit statistics) for export / inference
     out_dir: str = "artifacts/reports/v3/runs"
 
 
@@ -278,6 +279,10 @@ def run(cfg: TrainConfig, data: Dict[str, Dict], device: torch.device) -> Dict:
             if bad >= cfg.patience:
                 break
     model.load_state_dict(best["state"])
+    if cfg.save_ckpt:
+        ck = Path(cfg.out_dir)
+        ck.mkdir(parents=True, exist_ok=True)
+        torch.save({"cfg": asdict(cfg), "state": best["state"], "stats": stats}, ck / f"{cfg.name}.pt")
     res = {"config": asdict(cfg), "best_epoch": best["epoch"], "train_seconds": time.time() - t0, "history": history,
            "n_params": int(sum(p.numel() for p in model.parameters())), "stats_source": "fit split only"}
     for name, part in (("internal_val", val), ("test", test)):

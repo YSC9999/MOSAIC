@@ -1,0 +1,11 @@
+{
+ "clips": 50,
+ "predicted_violent": 45,
+ "interval_coverage_mean": 0.7786607799852832,
+ "interval_coverage_median": 0.8741721854304637,
+ "intervals_covering_whole_clip": 18,
+ "clips_with_2plus_intervals": 3,
+ "violent_windows_per_clip_mean": 5.177777777777778,
+ "lowest_window_prob_mean": 0.33526741275242483,
+ "clips_with_group_boxes": 45
+}

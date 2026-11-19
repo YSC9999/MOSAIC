@@ -1,0 +1,12 @@
+# RWF-2000, 30 fps copy (Kaggle vulamnguyen/rwf2000): 2,000 clips, 150 frames at 30 fps.
+name: rwf2000_30fps
+root: data/RWF-2000_30fps/RWF-2000
+layout: split_class            # root/<split>/<class>/clip.avi
+split_dirs:
+  train: [train]
+  test: [val]                  # the official validation folder is the held-out test set
+classes:
+  positive: [Fight]
+  negative: [NonFight]
+group: suffix_number           # <source>_<n>.avi clips of one source video stay on the same side of every split
+extensions: [.avi, .mp4]

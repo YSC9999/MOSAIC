@@ -24,14 +24,16 @@ ap.add_argument("--epochs", type=int, default=30)
 ap.add_argument("--overfit", type=int, default=0)
 ap.add_argument("--no-scene", action="store_true")
 ap.add_argument("--no-person", action="store_true")
-ap.add_argument("--no-gat", action="store_true")
+ap.add_argument("--gat", action="store_true", help="enable the GAT interaction graph (off by default)")
+ap.add_argument("--no-gat", action="store_true", help="kept for old commands; GAT is already off by default")
+ap.add_argument("--save-ckpt", action="store_true")
 ap.add_argument("--box-only", action="store_true")
 ap.add_argument("--dropout", type=float, default=0.3)
 ap.add_argument("--scene-in-dropout", type=float, default=0.0)
 ap.add_argument("--wd", type=float, default=0.05)
 a = ap.parse_args()
 cfg = TrainConfig(seed=a.seed, epochs=a.epochs, overfit_clips=a.overfit, use_scene=not a.no_scene,
-                  use_person=not a.no_person, out_dir=a.out_dir, use_gat=not a.no_gat, box_only=a.box_only, dropout=a.dropout,
+                  use_person=not a.no_person, out_dir=a.out_dir, save_ckpt=a.save_ckpt, use_gat=a.gat and not a.no_gat, box_only=a.box_only, dropout=a.dropout,
                   scene_in_dropout=a.scene_in_dropout, weight_decay=a.wd, name=f"{a.name}_s{a.seed}")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 data = load_all(ROOT / os.environ.get("MOSAIC_MANIFEST", "artifacts/manifests/rwf2000_manifest.json"),

@@ -1,0 +1,133 @@
+{
+ "config": {
+  "seed": 42,
+  "epochs": 30,
+  "warmup_epochs": 2,
+  "batch_clips": 8,
+  "lr": 0.0003,
+  "weight_decay": 0.05,
+  "patience": 6,
+  "window_neg_weight": 0.5,
+  "use_scene": true,
+  "use_person": true,
+  "use_gat": true,
+  "box_only": true,
+  "dropout": 0.3,
+  "scene_in_dropout": 0.0,
+  "overfit_clips": 0,
+  "name": "gdef_a4_boxonly_s42",
+  "out_dir": "artifacts/reports/v3_30fps_nano/runs"
+ },
+ "best_epoch": 5,
+ "train_seconds": 126.55041456222534,
+ "history": [
+  {
+   "epoch": 1,
+   "train_loss": 0.8153292942536442,
+   "val_loss": 0.38443735241889954,
+   "val_acc": 0.8238636363636364
+  },
+  {
+   "epoch": 2,
+   "train_loss": 0.39354704903611376,
+   "val_loss": 0.3531765937805176,
+   "val_acc": 0.8693181818181818
+  },
+  {
+   "epoch": 3,
+   "train_loss": 0.2883174471314588,
+   "val_loss": 0.4521597921848297,
+   "val_acc": 0.8636363636363636
+  },
+  {
+   "epoch": 4,
+   "train_loss": 0.24642597246184808,
+   "val_loss": 0.560758650302887,
+   "val_acc": 0.8693181818181818
+  },
+  {
+   "epoch": 5,
+   "train_loss": 0.19443632143313,
+   "val_loss": 0.5028954148292542,
+   "val_acc": 0.8920454545454546
+  },
+  {
+   "epoch": 6,
+   "train_loss": 0.16882857310559973,
+   "val_loss": 0.7788781523704529,
+   "val_acc": 0.8352272727272727
+  },
+  {
+   "epoch": 7,
+   "train_loss": 0.1328810328386674,
+   "val_loss": 0.8458101153373718,
+   "val_acc": 0.8522727272727273
+  },
+  {
+   "epoch": 8,
+   "train_loss": 0.11647271758251246,
+   "val_loss": 0.8230227828025818,
+   "val_acc": 0.8579545454545454
+  },
+  {
+   "epoch": 9,
+   "train_loss": 0.13448923479393915,
+   "val_loss": 0.7108009457588196,
+   "val_acc": 0.875
+  },
+  {
+   "epoch": 10,
+   "train_loss": 0.12778618347568085,
+   "val_loss": 0.705628514289856,
+   "val_acc": 0.8636363636363636
+  },
+  {
+   "epoch": 11,
+   "train_loss": 0.0732235488593683,
+   "val_loss": 0.7358941435813904,
+   "val_acc": 0.8920454545454546
+  }
+ ],
+ "n_params": 373889,
+ "stats_source": "fit split only",
+ "internal_val": {
+  "single": {
+   "accuracy": 0.8693181818181818,
+   "precision": 0.8850574712643678,
+   "recall": 0.8555555555555555,
+   "f1": 0.8700564971751412,
+   "roc_auc": 0.9372093023255814,
+   "ece": 0.10423797538334677,
+   "n": 176
+  },
+  "tta": {
+   "accuracy": 0.8920454545454546,
+   "precision": 0.8901098901098901,
+   "recall": 0.9,
+   "f1": 0.8950276243093923,
+   "roc_auc": 0.9396640826873385,
+   "ece": 0.09445733441547914,
+   "n": 176
+  }
+ },
+ "test": {
+  "single": {
+   "accuracy": 0.88,
+   "precision": 0.9222222222222223,
+   "recall": 0.83,
+   "f1": 0.8736842105263158,
+   "roc_auc": 0.95105,
+   "ece": 0.10269484534859658,
+   "n": 400
+  },
+  "tta": {
+   "accuracy": 0.88,
+   "precision": 0.9222222222222223,
+   "recall": 0.83,
+   "f1": 0.8736842105263158,
+   "roc_auc": 0.9524,
+   "ece": 0.09497186496853832,
+   "n": 400
+  }
+ }
+}
